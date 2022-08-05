@@ -16,7 +16,14 @@
         inherit src;
 
         nativeBuildInputs = [
+          pkgs.autoPatchelfHook
           pkgs.makeWrapper
+        ];
+
+        buildInputs = [
+          pkgs.zlib
+          pkgs.stdenv.cc.cc.lib
+          pkgs.xorg.libX11
         ];
 
         sourceRoot = ".";
@@ -40,55 +47,13 @@
             dest="$(realpath --relative-to="$src/resources-ext" "$f")"
             install -m755 -D "$f" "$out/lib/dana/resources-ext/$dest"
           done
+
+          wrapProgram $out/bin/dana --set DANA_HOME $out/lib/dana;
+          wrapProgram $out/bin/dnc --set DANA_HOME $out/lib/dana;
+
+          ln -s $out/bin/dana $out/lib/dana/dana
+          ln -s $out/bin/dnc $out/lib/dana/dnc
         '';
-
-        preFixup =
-          let
-            libPath = pkgs.lib.makeLibraryPath [
-              pkgs.zlib
-              pkgs.stdenv.cc.cc.lib
-              pkgs.xorg.libX11
-
-            ];
-          in
-          ''
-             patchelf \
-               --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-               --set-rpath "${libPath}" \
-               $out/bin/dana
-
-             patchelf \
-               --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-               --set-rpath "${libPath}" \
-               $out/bin/dnc
-
-            echo "lol"
-
-            find -L "$out/lib/dana/components" -type f -print0 | while read -d $'\0' f
-            do
-              if ldd "$f" 2>/dev/null
-              then
-                echo "$f"
-                patchelf \
-                  --set-rpath "${libPath}" \
-                  "$f"
-              fi
-            done
-
-            find -L "$out/lib/dana/resources-ext" -type f -print0 | while read -d $'\0' f
-            do
-              if ldd "$f" 2>/dev/null
-              then
-                echo "$f"
-                patchelf \
-                  --set-rpath "${libPath}" \
-                  "$f"
-              fi
-            done
-
-            wrapProgram $out/bin/dana --set DANA_HOME $out/lib/dana;
-            wrapProgram $out/bin/dnc --set DANA_HOME $out/lib/dana;
-          '';
 
         meta = with pkgs.lib; {
           description = "The Dana programming language";

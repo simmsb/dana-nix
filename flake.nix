@@ -48,8 +48,8 @@
             install -m755 -D "$f" "$out/lib/dana/resources-ext/$dest"
           done
 
-          wrapProgram $out/bin/dana --set DANA_HOME $out/lib/dana;
-          wrapProgram $out/bin/dnc --set DANA_HOME $out/lib/dana;
+          wrapProgram $out/bin/dana --set-default DANA_HOME $out/lib/dana;
+          wrapProgram $out/bin/dnc --set-default DANA_HOME $out/lib/dana;
 
           ln -s $out/bin/dana $out/lib/dana/dana
           ln -s $out/bin/dnc $out/lib/dana/dnc

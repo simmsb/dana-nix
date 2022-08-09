@@ -9,7 +9,7 @@
         stripRoot = false;
         sha256 = "sha256-YwNXq7n6Q7KBPP3zbyADobbkK+IX9DqVQHBsMz4m+WY=";
       };
-      drv = pkgs.stdenv.mkDerivation {
+      drv = doWrap: pkgs.stdenv.mkDerivation {
         name = "dana";
         pname = "dana";
         version = "255";
@@ -48,8 +48,8 @@
             install -m755 -D "$f" "$out/lib/dana/resources-ext/$dest"
           done
 
-          wrapProgram $out/bin/dana --set-default DANA_HOME $out/lib/dana;
-          wrapProgram $out/bin/dnc --set-default DANA_HOME $out/lib/dana;
+          ${if doWrap then "wrapProgram $out/bin/dana --set-default DANA_HOME $out/lib/dana;" else ""}
+          ${if doWrap then "wrapProgram $out/bin/dnc --set-default DANA_HOME $out/lib/dana;" else ""}
 
           ln -s $out/bin/dana $out/lib/dana/dana
           ln -s $out/bin/dnc $out/lib/dana/dnc
@@ -70,6 +70,7 @@
       };
     in
     {
-      packages.x86_64-linux.default = drv;
+      packages.x86_64-linux.default = drv true;
+      packages.x86_64-linux.unwrapped = drv false;
     };
 }
